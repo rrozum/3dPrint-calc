@@ -2,6 +2,8 @@ package app
 
 import (
 	"3dPrintCalc/internal/config"
+	"3dPrintCalc/internal/repository"
+	"3dPrintCalc/internal/service"
 	"3dPrintCalc/pkg/database/sqlite3"
 	"3dPrintCalc/view/desktop"
 	"database/sql"
@@ -33,32 +35,22 @@ func Run(configPath string) {
 
 	dbConnection, err := sqlite3.NewConnection(cfg.Database.Sqlite3.LocalPath)
 
-	rows, err := dbConnection.Query("select * from test_table")
-
-	defer func(rows *sql.Rows) {
-		err := rows.Close()
-		if err != nil {
-			panic(err)
-		}
-	}(rows)
-
-	var testRows []testTable
-
-	for rows.Next() {
-		testRow := testTable{}
-
-		err := rows.Scan(&testRow.id, &testRow.name, &testRow.price)
-		if err != nil {
-			continue
-		}
-
-		testRows = append(testRows, testRow)
-	}
+	repos := repository.NewRepositories(dbConnection)
+	services := service.NewServices(service.Deps{
+		Repos: repos,
+	})
 
 	switch cfg.AppMode {
 	case desktopMode:
-		desktop.Run(testRows[0].name)
+		desktop.Run(services)
 	default:
 		fmt.Println("app_mode not set!")
 	}
+
+	defer func(db *sql.DB) {
+		err := db.Close()
+		if err != nil {
+			panic(err)
+		}
+	}(dbConnection)
 }

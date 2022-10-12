@@ -11,12 +11,5 @@ func NewConnection(dataSourceName string) (*sql.DB, error) {
 
 	db, err := sql.Open("sqlite3", dataSourceName)
 
-	defer func(db *sql.DB) {
-		err := db.Close()
-		if err != nil {
-			panic(err)
-		}
-	}(db)
-
 	return db, err
 }
