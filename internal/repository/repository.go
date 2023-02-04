@@ -7,6 +7,8 @@ import (
 
 type Repositories struct {
 	ApplicationSettings ApplicationSettings
+	Projects            Projects
+	Details             Details
 }
 
 type ApplicationSettings interface {
@@ -14,8 +16,20 @@ type ApplicationSettings interface {
 	GetAll() ([]domain.ApplicationSetting, error)
 }
 
+type Projects interface {
+	Save(project domain.Project) error
+	GetAll() ([]domain.Project, error)
+}
+
+type Details interface {
+	Save(detail domain.Detail) error
+	GetByProject(projectId int) ([]domain.Detail, error)
+}
+
 func NewRepositories(db *sql.DB) *Repositories {
 	return &Repositories{
 		ApplicationSettings: NewApplicationSettingsRepo(db),
+		Projects:            NewProjectsRepo(db),
+		Details:             NewDetailsRepo(db),
 	}
 }

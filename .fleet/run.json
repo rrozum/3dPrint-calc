@@ -1,0 +1,14 @@
+{
+    "configurations": [
+        {
+            "type": "go",
+            "name": "run",
+            "goExecPath": "K:\\Projects\\Golang\\go1.18\\bin\\go.exe",
+            "buildTargets": [
+                "run",
+                "cmd/app/main.go"
+            ],
+        },
+
+    ]
+}

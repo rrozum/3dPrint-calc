@@ -9,8 +9,13 @@ type ApplicationSettings interface {
 	GetAll() ([]domain.ApplicationSetting, error)
 }
 
+type Projects interface {
+	GetAll() ([]domain.Project, error)
+}
+
 type Services struct {
 	ApplicationSettings ApplicationSettings
+	Projects            Projects
 }
 
 type Deps struct {
@@ -20,5 +25,6 @@ type Deps struct {
 func NewServices(deps Deps) *Services {
 	return &Services{
 		ApplicationSettings: NewApplicationSettingsService(deps.Repos.ApplicationSettings),
+		Projects:            NewProjectsService(deps.Repos.Projects),
 	}
 }

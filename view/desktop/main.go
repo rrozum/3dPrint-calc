@@ -4,42 +4,22 @@ import (
 	"3dPrintCalc/internal/service"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
-	"fyne.io/fyne/v2/canvas"
-	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/layout"
-	"image/color"
-	"time"
 )
 
-func Run(services *service.Services) {
-	application := app.New()
-	w := application.NewWindow("Hello World")
-	w.Resize(fyne.Size{Width: 500, Height: 100})
-
-	content := container.New(layout.NewVBoxLayout())
-
-	updateData(content, services)
-
-	w.SetContent(content)
-
-	go func() {
-		for range time.Tick(time.Second) {
-			updateData(content, services)
-		}
-	}()
-
-	w.ShowAndRun()
+type Ui struct {
+	mainWindow fyne.Window
+	Services   *service.Services
 }
 
-func updateData(content *fyne.Container, services *service.Services) {
-	content.RemoveAll()
+func Run(services *service.Services) {
+	application := app.NewWithID("com.3dthing.printcalc")
+	w := application.NewWindow("Калькулятор 3D печати")
 
-	applicationSettings, _ := services.ApplicationSettings.GetAll()
-	for _, applicationSetting := range applicationSettings {
-		settingString := applicationSetting.Key + ": " + applicationSetting.Value
+	ui := &Ui{mainWindow: w, Services: services}
 
-		content.Add(canvas.NewText(settingString, color.White))
-	}
+	w.Resize(fyne.NewSize(900, 600))
+	ui.render(ui.makeHome())
+	w.SetIcon(resourceIconPng)
 
-	content.Refresh()
+	w.ShowAndRun()
 }
