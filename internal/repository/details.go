@@ -39,7 +39,7 @@ func (r *DetailsRepo) Save(detail domain.Detail) error {
 }
 
 func (r *DetailsRepo) GetByProject(projectId int) ([]domain.Detail, error) {
-	rows, err := r.db.Query("select * from details where project_id = $1", projectId)
+	rows, err := r.db.Query("select * from details where project_id = $1 order by id desc", projectId)
 
 	defer func(rows *sql.Rows) {
 		err := rows.Close()

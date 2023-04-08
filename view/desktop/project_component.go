@@ -29,7 +29,7 @@ func NewProject(p domain.Project, projectsContainer *fyne.Container, ui *Ui) *pr
 	project.ExtendBaseWidget(project)
 
 	project.openProjectFunction = func() {
-		ui.render(ui.makeProjectPage(p.Name))
+		ui.render(ui.makeProjectPage(p))
 	}
 
 	menu := fyne.NewMenu("",
