@@ -8,6 +8,9 @@ import (
 	"3dPrintCalc/view/desktop"
 	"database/sql"
 	"fmt"
+	"os"
+	"path/filepath"
+
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -26,6 +29,11 @@ type testTable struct {
 }
 
 func Run(configPath string) {
+	ex, err := os.Executable()
+	if err != nil {
+		panic(err)
+	}
+	configPath = filepath.Join(ex, "../../../", configPath)
 	cfg, err := config.Init(configPath)
 	if err != nil {
 		fmt.Println(err)
@@ -33,7 +41,13 @@ func Run(configPath string) {
 		return
 	}
 
-	dbConnection, err := sqlite3.NewConnection(cfg.Database.Sqlite3.LocalPath)
+	dbConnection, err := sqlite3.NewConnection(filepath.Join(ex, "../../../", cfg.Database.Sqlite3.LocalPath))
+
+	if err != nil {
+		fmt.Println(err)
+
+		return
+	}
 
 	repos := repository.NewRepositories(dbConnection)
 	services := service.NewServices(service.Deps{

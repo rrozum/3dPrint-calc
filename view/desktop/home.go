@@ -3,13 +3,23 @@ package desktop
 import (
 	"3dPrintCalc/internal/domain"
 	"fmt"
+	"image/color"
+	"strconv"
+
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/data/binding"
 	"fyne.io/fyne/v2/widget"
-	"image/color"
-	"strconv"
 )
+
+type detailParams struct {
+	costTimeMachine  binding.String
+	costTimeOperator binding.String
+	costPlastic      binding.String
+	costGeneral      binding.String
+	costForClient    binding.String
+}
 
 func (ui *Ui) render(page fyne.CanvasObject) {
 	ui.mainWindow.SetContent(page)
@@ -27,20 +37,64 @@ func (ui *Ui) makeProjectPage(project domain.Project) fyne.CanvasObject {
 	header.TextSize = 24
 	header.TextStyle.Monospace = true
 
+	headerProject := canvas.NewText("Параметры проекта", color.White)
+	headerProject.TextSize = 20
+	headerProject.TextStyle.Monospace = true
+
+	headerDetail := canvas.NewText("Расчеты по детали", color.White)
+	headerDetail.TextSize = 20
+	headerDetail.TextStyle.Monospace = true
+
+	details, _ := ui.Services.Details.GetByProject(project.Id)
+
+	params := detailParams{
+		costTimeMachine:  binding.NewString(),
+		costTimeOperator: binding.NewString(),
+		costPlastic:      binding.NewString(),
+		costGeneral:      binding.NewString(),
+		costForClient:    binding.NewString(),
+	}
+
+	params.costTimeMachine.Set("1234")
+	params.costTimeOperator.Set("1234")
+	params.costPlastic.Set("1234")
+	params.costGeneral.Set("1234")
+	params.costForClient.Set("1234")
+
 	vBox := container.NewVBox(
-		container.NewCenter(header),
+		container.NewPadded(container.NewVBox(header)),
+		container.NewMax(canvas.NewLine(color.White)),
+		container.NewPadded(container.NewCenter(headerProject)),
 		container.NewPadded(makeProjectParams(project).Objects...),
+		container.NewMax(canvas.NewLine(color.White)),
+		container.NewPadded(container.NewCenter(headerDetail)),
+		container.NewPadded(makeDetailParams(params).Objects...),
 	)
+
+	setDetail := func(detail domain.Detail) {
+		params.costTimeMachine.Set(detail.Name)
+		params.costTimeOperator.Set(detail.Name)
+		params.costPlastic.Set(detail.Name)
+		params.costGeneral.Set(detail.Name)
+		params.costForClient.Set(detail.Name)
+	}
 
 	backButton := widget.NewButton("Вернуться", func() {
 		ui.render(ui.makeHome())
 	})
 
-	details, _ := ui.Services.Details.GetByProject(project.Id)
-	split := container.NewHSplit(makeNavForDetails(details, backButton), vBox)
+	split := container.NewHSplit(makeNavForDetails(setDetail, details, backButton), vBox)
 	split.Offset = 0.2
 
 	return split
+}
+
+func makeDetailParams(params detailParams) fyne.Container {
+	return *container.NewWithoutLayout(container.NewGridWithRows(
+		2,
+		container.NewGridWithColumns(2, widget.NewLabel("Параметр"), widget.NewLabel("Значение")),
+		container.NewGridWithColumns(2, widget.NewLabel("Стоимость времени работы оборудования"), widget.NewLabelWithData(params.costTimeMachine)),
+	))
 }
 
 func makeProjectParams(project domain.Project) fyne.Container {
@@ -58,7 +112,7 @@ func makeProjectParamEntry(paramName, entryDefaultValue string) *fyne.Container 
 	return container.NewGridWithColumns(2, widget.NewLabel(paramName), entry)
 }
 
-func makeNavForDetails(details []domain.Detail, backButton *widget.Button) fyne.CanvasObject {
+func makeNavForDetails(setDetail func(detail domain.Detail), details []domain.Detail, backButton *widget.Button) fyne.CanvasObject {
 	var detailIDs []string
 
 	detailsMap := make(map[string]domain.Detail)
@@ -78,6 +132,10 @@ func makeNavForDetails(details []domain.Detail, backButton *widget.Button) fyne.
 	}, func(id widget.TreeNodeID, b bool, object fyne.CanvasObject) {
 		object.(*widget.Label).SetText(detailsMap[id].Name)
 	})
+
+	tree.OnSelected = func(uid widget.TreeNodeID) {
+		setDetail(detailsMap[uid])
+	}
 
 	//a := fyne.CurrentApp()
 	//themes := container.NewGridWithColumns(2,
